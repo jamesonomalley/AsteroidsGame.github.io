@@ -125,16 +125,36 @@ function init() {
     particles = []
     score = 0
     money = 0
+    enemyCount = 0
+    enemyCountLimit = 10
+    enemyCountLevelUp = 0
+    enemyCountLimitLevelUp = 5
+    enemySpeed = 1
+    paused = false
+    pausedLevelUp = false
+    projectileSpeed = 3
+    shotgunBought = false
+    shotgunUpgraded = 0
+    projectileUpgraded = 0
+    projectilePrice = 300
+    shotgunPrice = 1000
+    levelUp = 0
+    enemyRespawnTime = 1000
+    enemyLevelUpRespawnTime = 1000
     scoreElement.innerHTML = score
     modalScoreElement.innerHTML = score
     moneyElement.innerHTML = money
+    fasterProjectilePrice.innerHTML = "$" + projectilePrice
+    shotgunSpreadPrice.innerHTML = "$" + shotgunPrice
     clearEnemies()
+    clearEnemiesLevelUp()
     context.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 var enemyCount = 0
 var enemyCountLimit = 10
 var paused = false
+var enemyRespawnTime = 1000
 var spawner
 function spawnEnemies() {
     spawner = setInterval(() => {
@@ -160,11 +180,48 @@ function spawnEnemies() {
                 clearEnemies() 
                 paused = true       
             }                
-    }, 1000)    
+    }, enemyRespawnTime)    
 }
 
 function clearEnemies() {
     clearInterval(spawner)
+}
+
+var enemySpeed = 1
+var enemyCountLevelUp = 0
+var enemyCountLimitLevelUp = 5
+var pausedLevelUp = false
+var enemyLevelUpRespawnTime = 1000
+var spawnerLevelUp
+function spawnEnemiesLevelUp() {
+    spawnerLevelUp = setInterval(() => {
+            const radius = Math.random() * (30 - 7) + 7
+            let x
+            let y
+            if (Math.random() < 0.5) {
+                x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius
+                y = Math.random() * canvas.height
+            }
+            else {
+                x = Math.random() * canvas.width
+                y = Math.random() < 0.5 ? 0 - radius : canvas.width + radius
+            }
+            const color = `hsl(${Math.random() * 360}, 50%, 50%)`
+            const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x)
+            const velocity = {x: Math.cos(angle) * enemySpeed, y: Math.sin(angle) * enemySpeed}
+            if (enemyCountLevelUp != enemyCountLimitLevelUp) {
+                enemies.push(new Enemy(x, y, radius, color, velocity)) 
+                enemyCountLevelUp++             
+            }
+            else {
+                clearEnemiesLevelUp() 
+                pausedLevelUp = true       
+            }                
+    }, enemyLevelUpRespawnTime)    
+}
+
+function clearEnemiesLevelUp() {
+    clearInterval(spawnerLevelUp)
 }
 
 let animationId
@@ -250,13 +307,12 @@ function animate() {
                     scoreElement.innerHTML = score
                     moneyElement.innerHTML = money
                     enemies.splice(enemyIndex, 1)
-                    console.log("Enemies inside array: " + enemies.length)
                     projectiles.splice(projectileIndex, 1)
                     if (enemies.length == 0 && paused == true) { 
                         setTimeout(() => {
                             cancelAnimationFrame(animationId)                       
                             pauseModalElement.style.display = 'flex' 
-                        }, 2000)                        
+                        }, 1500)                        
                     } 
                 }
             }
@@ -286,13 +342,13 @@ addEventListener('click', (event) => {
         projectiles.push(new Projectile(canvas.width / 2, canvas.height / 2, 5, 'white', velocity3)
         ) 
         if (shotgunUpgraded == 2) {
-            const angle2 = Math.atan2(event.clientY - canvas.height / 1.7, event.clientX - canvas.width / 2)
-            const velocity2 = {x: Math.cos(angle2) * projectileSpeed, y: Math.sin(angle2) * projectileSpeed}
-            projectiles.push(new Projectile(canvas.width / 2, canvas.height / 2, 5, 'white', velocity2)
+            const angle4 = Math.atan2(event.clientY - canvas.height / 1.7, event.clientX - canvas.width / 2)
+            const velocity4 = {x: Math.cos(angle4) * projectileSpeed, y: Math.sin(angle4) * projectileSpeed}
+            projectiles.push(new Projectile(canvas.width / 2, canvas.height / 2, 5, 'white', velocity4)
             ) 
-            const angle3 = Math.atan2(event.clientY - canvas.height / 2.3, event.clientX - canvas.width / 2)
-            const velocity3 = {x: Math.cos(angle3) * projectileSpeed, y: Math.sin(angle3) * projectileSpeed}
-            projectiles.push(new Projectile(canvas.width / 2, canvas.height / 2, 5, 'white', velocity3)
+            const angle5 = Math.atan2(event.clientY - canvas.height / 2.3, event.clientX - canvas.width / 2)
+            const velocity5 = {x: Math.cos(angle5) * projectileSpeed, y: Math.sin(angle5) * projectileSpeed}
+            projectiles.push(new Projectile(canvas.width / 2, canvas.height / 2, 5, 'white', velocity5)
             ) 
         }
     }
@@ -344,7 +400,9 @@ purchaseSpreadButton.addEventListener('click', () => {
     }
 })
 
+var levelUp = 0
 doneButton.addEventListener('click', () => {
+    levelUp++
     pauseModalElement.style.display = 'none'
     paused = false
     if (purchaseFasterButton.disabled == true) {
@@ -361,9 +419,25 @@ doneButton.addEventListener('click', () => {
             purchaseSpreadButton.style.backgroundColor = "blue" 
             purchaseSpreadButton.disabled = false
         }
-    }    
-    enemyCount = 0
-    enemyCountLimit += 5
+    }  
+     
+    enemyCount = 0    
+    enemyCountLimit += 5   
     animate()
     spawnEnemies()
+
+    if (levelUp >= 3) {
+        spawnEnemiesLevelUp()
+        if (enemyRespawnTime > 500) {
+            enemyRespawnTime -= 100
+        }        
+        enemyCountLevelUp = 0
+        enemyCountLimitLevelUp += 5
+        enemySpeed += 0.2
+        if (levelUp >= 6) {
+            if (enemyLevelUpRespawnTime > 500) {
+                enemyLevelUpRespawnTime -= 100
+            }
+        }
+    } 
 })
