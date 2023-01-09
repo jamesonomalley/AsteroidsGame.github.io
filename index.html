@@ -17,26 +17,42 @@
         <h1 class="text-4xl font-bold leading-none" id="modalScoreElement">0</h1>
         <p class="text-xl text-gray-700 mb-4">Points</p>
         <div>
-            <button class="bg-blue-800 text-white w-full py-3 rounded-full text-base" id="startGameButton">Start Game</button>
+            <button class="bg-blue-800 text-white w-full py-3 rounded-full text-base hover:bg-opacity-80" id="startGameButton">Start Game</button>
         </div>    
     </div>
 </div>
 <div class="fixed inset-0 flex items-center justify-center" id="pauseModalElement">
-    <div class="bg-white max-w-xl w-full p-6 rounded-sm text-center">
-        <h1 class="text-4xl font-bold leading-none">Purchase Upgrades:</h1>
-        <p class="text-xl text-gray-700 mb-2 mt-2">Faster Projectiles</p>
-        <p class="text-xl text-gray-700 mb-2 mt-2" id="fasterProjectilePrice">$0</p>
-        <div>
-            <button class="bg-blue-800 text-white w-60 py-3 rounded-full text-base" id="purchaseFasterButton">Upgrade</button>
-        </div>  
-        <p class="text-xl text-gray-700 mb-2 mt-2">Shotgun Spread</p>
-        <p class="text-xl text-gray-700 mb-2 mt-2" id="shotgunSpreadPrice">$0</p>
-        <div>
-            <button class="bg-blue-800 text-white w-60 py-3 rounded-full text-base" id="purchaseSpreadButton">Upgrade</button>
-        </div>  
-        <div>
-            <button class="bg-blue-800 text-white w-full py-3 rounded-full text-base mb-2 mt-4" id="doneButton">Done</button>
-        </div>  
+    <div class="bg-white max-w-xl w-full p-6 rounded-sm text-center grid grid-cols-2 content-start">
+        <h1 class="text-4xl font-bold leading-none col-span-2 mb-2">Purchase Upgrades:</h1>
+            <div class="col-span-1 mr-2">
+                <p class="text-xl text-gray-700 mb-2 mt-2">Faster Projectiles</p>
+                <p class="text-xl text-gray-700 mb-2 mt-2" id="fasterProjectilePrice">$0</p>
+                <div>
+                    <button class="bg-blue-800 text-white w-full py-3 rounded-full text-base hover:bg-opacity-80" id="purchaseFasterButton">Upgrade</button>
+                </div> 
+            </div>
+            <div class="col-span-1 ml-2">
+                <p class="text-xl text-gray-700 mb-2 mt-2">Shotgun Spread</p>
+                <p class="text-xl text-gray-700 mb-2 mt-2" id="shotgunSpreadPrice">$0</p>
+                <div>
+                    <button class="bg-blue-800 text-white w-full py-3 rounded-full text-base hover:bg-opacity-80" id="purchaseSpreadButton">Upgrade</button>
+                </div>  
+            </div>
+            <div class="col-span-1 mr-2">
+                <p class="text-xl text-gray-700 mb-2 mt-2">Higher Damage</p>
+                <p class="text-xl text-gray-700 mb-2 mt-2" id="higherDamagePrice">$0</p>
+                <div>
+                    <button class="bg-blue-800 text-white w-full py-3 rounded-full text-base hover:bg-opacity-80" id="purchaseDamageButton">Upgrade</button>
+                </div>  
+            </div>
+            <div class="col-span-1 ml-2">
+                <p class="text-xl text-gray-700 mb-2 mt-2">More Money</p>
+                <p class="text-xl text-gray-700 mb-2 mt-2" id="moreMoneyPrice">$0</p>
+                <div>
+                    <button class="bg-blue-800 text-white w-full py-3 rounded-full text-base hover:bg-opacity-80" id="purchaseMoneyButton">Upgrade</button>
+                </div>  
+            </div>
+        <button class="bg-blue-800 text-white w-full py-3 rounded-full text-base mt-4 hover:bg-opacity-80 col-span-2" id="doneButton">Done</button>        
     </div>
 </div>
 <canvas></canvas>

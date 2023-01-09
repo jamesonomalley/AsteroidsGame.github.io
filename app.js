@@ -13,9 +13,14 @@ const modalScoreElement = document.querySelector('#modalScoreElement')
 const pauseModalElement = document.querySelector('#pauseModalElement')
 pauseModalElement.style.display = 'none'
 const purchaseFasterButton = document.querySelector('#purchaseFasterButton')
+const purchaseSpreadButton = document.querySelector('#purchaseSpreadButton')
+const purchaseDamageButton = document.querySelector('#purchaseDamageButton')
+const purchaseMoneyButton = document.querySelector('#purchaseMoneyButton')
 const doneButton = document.querySelector('#doneButton')
 const fasterProjectilePrice = document.querySelector('#fasterProjectilePrice')
 const shotgunSpreadPrice = document.querySelector('#shotgunSpreadPrice')
+const higherDamagePrice = document.querySelector('#higherDamagePrice')
+const moreMoneyPrice = document.querySelector('#moreMoneyPrice')
 
 class Player {
     constructor(x, y, radius, color) {
@@ -127,35 +132,44 @@ function init() {
     money = 0
     enemyCount = 0
     enemyCountLimit = 10
-    enemyCountLevelUp = 0
-    enemyCountLimitLevelUp = 5
     enemySpeed = 1
     paused = false
     pausedLevelUp = false
     projectileSpeed = 3
     shotgunBought = false
     shotgunUpgraded = 0
-    projectileUpgraded = 0
     projectilePrice = 300
     shotgunPrice = 1000
+    damagePrice = 1200
+    damageBought = false
+    damageUpgraded = 0
+    moneyPrice = 200
+    lowDamageMoneyGained = 12
+    killDamageMoneyGained = 37
     levelUp = 0
-    enemyRespawnTime = 1000
-    enemyLevelUpRespawnTime = 1000
+    enemyRespawnTime = 1105.2
+    enemyLevelUpRespawnTime = 1703.3
     scoreElement.innerHTML = score
     modalScoreElement.innerHTML = score
     moneyElement.innerHTML = money
     fasterProjectilePrice.innerHTML = "$" + projectilePrice
     shotgunSpreadPrice.innerHTML = "$" + shotgunPrice
+    higherDamagePrice.innerHTML = "$" + damagePrice
+    moreMoneyPrice.innerHTML = "$" + moneyPrice
     clearEnemies()
-    clearEnemiesLevelUp()
     context.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+var levelUp = 0
 var enemyCount = 0
 var enemyCountLimit = 10
+var enemySpeed = 1
 var paused = false
-var enemyRespawnTime = 1000
+var pausedLevelUp = false
+var enemyRespawnTime = 1105.2
+var enemyLevelUpRespawnTime = 1703.3
 var spawner
+var spawnerLevelUp
 function spawnEnemies() {
     spawner = setInterval(() => {
             const radius = Math.random() * (30 - 7) + 7
@@ -171,7 +185,7 @@ function spawnEnemies() {
             }
             const color = `hsl(${Math.random() * 360}, 50%, 50%)`
             const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x)
-            const velocity = {x: Math.cos(angle), y: Math.sin(angle)}
+            let velocity = {x: Math.cos(angle), y: Math.sin(angle)}
             if (enemyCount != enemyCountLimit) {
                 enemies.push(new Enemy(x, y, radius, color, velocity)) 
                 enemyCount++             
@@ -180,21 +194,9 @@ function spawnEnemies() {
                 clearEnemies() 
                 paused = true       
             }                
-    }, enemyRespawnTime)    
-}
-
-function clearEnemies() {
-    clearInterval(spawner)
-}
-
-var enemySpeed = 1
-var enemyCountLevelUp = 0
-var enemyCountLimitLevelUp = 5
-var pausedLevelUp = false
-var enemyLevelUpRespawnTime = 1000
-var spawnerLevelUp
-function spawnEnemiesLevelUp() {
-    spawnerLevelUp = setInterval(() => {
+    }, enemyRespawnTime)   
+    if (levelUp > 1) {
+        spawnerLevelUp = setInterval(() => {
             const radius = Math.random() * (30 - 7) + 7
             let x
             let y
@@ -208,25 +210,29 @@ function spawnEnemiesLevelUp() {
             }
             const color = `hsl(${Math.random() * 360}, 50%, 50%)`
             const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x)
-            const velocity = {x: Math.cos(angle) * enemySpeed, y: Math.sin(angle) * enemySpeed}
-            if (enemyCountLevelUp != enemyCountLimitLevelUp) {
+            let velocity = {x: Math.cos(angle) * enemySpeed, y: Math.sin(angle) * enemySpeed}
+            if (enemyCount != enemyCountLimit) {
                 enemies.push(new Enemy(x, y, radius, color, velocity)) 
-                enemyCountLevelUp++             
+                enemyCount++             
             }
             else {
-                clearEnemiesLevelUp() 
+                clearEnemies() 
                 pausedLevelUp = true       
             }                
-    }, enemyLevelUpRespawnTime)    
+        }, enemyLevelUpRespawnTime)
+    } 
 }
 
-function clearEnemiesLevelUp() {
+function clearEnemies() {
+    clearInterval(spawner)
     clearInterval(spawnerLevelUp)
 }
 
 let animationId
 let score = 0
 let money = 0
+var lowDamageMoneyGained = 12
+var killDamageMoneyGained = 37
 let highScore = 0
 function animate() {
     animationId = requestAnimationFrame(animate)
@@ -254,20 +260,6 @@ function animate() {
 
     enemies.slice().forEach((enemy, enemyIndex) => {
         enemy.update()
-
-        const distance = Math.hypot(player.x - enemy.x, player.y - enemy.y)
-
-        // end game
-        if (distance - enemy.radius - player.radius < 1) {
-            cancelAnimationFrame(animationId)
-            modalElement.style.display = 'flex'
-            modalScoreElement.innerHTML = score
-            if (score > highScore) {
-                highScore = score
-                highScoreElement.innerHTML = score
-            }
-            startGameButton.innerHTML = "Play Again"
-        }
         projectiles.slice().forEach((projectile, projectileIndex) => {
             const distance = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y)
             // when projectiles touch enemy
@@ -286,46 +278,126 @@ function animate() {
                         }
                     ))
                 }
-
-                if (enemy.radius - 10 > 5) {
-
-                    // increase score
-                    score += 100
-                    money += 12
-                    scoreElement.innerHTML = score
-                    moneyElement.innerHTML = money
-                    gsap.to(enemy, {
-                        radius: enemy.radius - 10
-                    })
-                    projectiles.splice(projectileIndex, 1)
+                if (damageBought){          
+                    console.log("Entering damage bought true")       
+                    if (damageUpgraded == 2) {
+                        console.log("Entering damange upgraded 2")
+                        if (enemy.radius - 20 > 5) {
+                            // increase score
+                            score += 100
+                            money += lowDamageMoneyGained
+                            scoreElement.innerHTML = score
+                            moneyElement.innerHTML = money
+                            gsap.to(enemy, {
+                                radius: enemy.radius - 20
+                            })
+                            projectiles.splice(projectileIndex, 1)
+                        }
+                        else {
+                            // remove from canvas altogether
+                            // increase score
+                            score += 250
+                            money += killDamageMoneyGained
+                            scoreElement.innerHTML = score
+                            moneyElement.innerHTML = money
+                            enemies.splice(enemyIndex, 1)
+                            projectiles.splice(projectileIndex, 1)
+                            if (enemies.length == 0 && (paused == true || pausedLevelUp == true)) { 
+                                setTimeout(() => {
+                                    cancelAnimationFrame(animationId)                       
+                                    pauseModalElement.style.display = 'flex' 
+                                }, 1500)                        
+                            } 
+                        }
+                    }
+                    else {
+                        if (enemy.radius - 15 > 5) {
+                            // increase score
+                            score += 100
+                            money += lowDamageMoneyGained
+                            scoreElement.innerHTML = score
+                            moneyElement.innerHTML = money
+                            gsap.to(enemy, {
+                                radius: enemy.radius - 15
+                            })
+                            projectiles.splice(projectileIndex, 1)
+                        }
+                        else {
+                            // remove from canvas altogether
+                            // increase score
+                            score += 250
+                            money += killDamageMoneyGained
+                            scoreElement.innerHTML = score
+                            moneyElement.innerHTML = money
+                            enemies.splice(enemyIndex, 1)
+                            projectiles.splice(projectileIndex, 1)
+                            if (enemies.length == 0 && (paused == true || pausedLevelUp == true)) { 
+                                setTimeout(() => {
+                                    cancelAnimationFrame(animationId)                       
+                                    pauseModalElement.style.display = 'flex' 
+                                }, 1500)                        
+                            } 
+                        }
+                    }
                 }
                 else {
-                    // remove from canvas altogether
-                    // increase score
-                    score += 250
-                    money += 37
-                    scoreElement.innerHTML = score
-                    moneyElement.innerHTML = money
-                    enemies.splice(enemyIndex, 1)
-                    projectiles.splice(projectileIndex, 1)
-                    if (enemies.length == 0 && paused == true) { 
-                        setTimeout(() => {
-                            cancelAnimationFrame(animationId)                       
-                            pauseModalElement.style.display = 'flex' 
-                        }, 1500)                        
-                    } 
+                    console.log("Entering normal damage")
+                    if (enemy.radius - 10 > 5) {
+                        // increase score
+                        score += 100
+                        money += lowDamageMoneyGained
+                        scoreElement.innerHTML = score
+                        moneyElement.innerHTML = money
+                        gsap.to(enemy, {
+                            radius: enemy.radius - 10
+                        })
+                        projectiles.splice(projectileIndex, 1)
+                    }
+                    else {
+                        // remove from canvas altogether
+                        // increase score
+                        score += 250
+                        money += killDamageMoneyGained
+                        scoreElement.innerHTML = score
+                        moneyElement.innerHTML = money
+                        enemies.splice(enemyIndex, 1)
+                        projectiles.splice(projectileIndex, 1)
+                        if (enemies.length == 0 && (paused == true || pausedLevelUp == true)) { 
+                            setTimeout(() => {
+                                cancelAnimationFrame(animationId)                       
+                                pauseModalElement.style.display = 'flex' 
+                            }, 1500)                        
+                        } 
+                    }
                 }
+                
             }
         })
+
+        // end game
+        const distance = Math.hypot(player.x - enemy.x, player.y - enemy.y)
+        if (distance - enemy.radius - player.radius < 1) {
+            cancelAnimationFrame(animationId)
+            modalElement.style.display = 'flex'
+            modalScoreElement.innerHTML = score
+            if (score > highScore) {
+                highScore = score
+                highScoreElement.innerHTML = score
+            }
+            startGameButton.innerHTML = "Play Again"
+        }
     })
 }
 
 var projectileSpeed = 3
 var shotgunBought = false
 var shotgunUpgraded = 0
-var projectileUpgraded = 0
+var damageBought = false
+var damageUpgraded = 0
 var projectilePrice = 300
+var moneyPrice = 200
 var shotgunPrice = 1000
+var damagePrice = 1200
 addEventListener('click', (event) => {
     const angle = Math.atan2(event.clientY - canvas.height / 2, event.clientX - canvas.width / 2)
     const velocity = {x: Math.cos(angle) * projectileSpeed, y: Math.sin(angle) * projectileSpeed}
@@ -367,12 +439,11 @@ purchaseFasterButton.addEventListener('click', () => {
         fasterProjectilePrice.innerHTML = "$" + projectilePrice
         money -= projectilePrice
         moneyElement.innerHTML = money
-        projectileSpeed += 1.5
+        projectileSpeed += 0.75
         purchaseFasterButton.innerHTML = "Purchased!"
         purchaseFasterButton.style.backgroundColor = "green" 
         purchaseFasterButton.disabled = true
-        projectileUpgraded++
-        projectilePrice *= 2
+        projectilePrice *= 2.5
     }
     else {
         purchaseFasterButton.innerHTML = "Insufficient Funds!"
@@ -400,11 +471,49 @@ purchaseSpreadButton.addEventListener('click', () => {
     }
 })
 
-var levelUp = 0
+purchaseDamageButton.addEventListener('click', () => {
+    if (money > damagePrice) {
+        higherDamagePrice.innerHTML = "$" + damagePrice
+        money -= damagePrice
+        moneyElement.innerHTML = money
+        damageBought = true
+        damageUpgraded++
+        damagePrice *= 8
+        purchaseDamageButton.innerHTML = "Purchased!"
+        purchaseDamageButton.style.backgroundColor = "green" 
+        purchaseDamageButton.disabled = true
+    }
+    else {
+        purchaseDamageButton.innerHTML = "Insufficient Funds!"
+        purchaseDamageButton.style.backgroundColor = "red" 
+        purchaseDamageButton.disabled = true
+    }
+})
+
+purchaseMoneyButton.addEventListener('click', () => {
+    if (money > moneyPrice) {
+        moreMoneyPrice.innerHTML = "$" + moneyPrice
+        money -= moneyPrice
+        moneyElement.innerHTML = money
+        lowDamageMoneyGained = Math.trunc(lowDamageMoneyGained * 1.15)
+        killDamageMoneyGained = Math.trunc(killDamageMoneyGained * 1.15)
+        moneyPrice += 250
+        purchaseMoneyButton.innerHTML = "Purchased!"
+        purchaseMoneyButton.style.backgroundColor = "green" 
+        purchaseMoneyButton.disabled = true
+    }
+    else {
+        purchaseMoneyButton.innerHTML = "Insufficient Funds!"
+        purchaseMoneyButton.style.backgroundColor = "red" 
+        purchaseMoneyButton.disabled = true
+    }
+})
+
 doneButton.addEventListener('click', () => {
     levelUp++
     pauseModalElement.style.display = 'none'
     paused = false
+    pausedLevelUp = false
     if (purchaseFasterButton.disabled == true) {
         fasterProjectilePrice.innerHTML = "$" + projectilePrice
         purchaseFasterButton.innerHTML = "Upgrade"
@@ -419,25 +528,43 @@ doneButton.addEventListener('click', () => {
             purchaseSpreadButton.style.backgroundColor = "blue" 
             purchaseSpreadButton.disabled = false
         }
-    }  
+    } 
+    else if (shotgunUpgraded == 2) {
+        shotgunSpreadPrice.innerHTML = "-"
+        purchaseSpreadButton.innerHTML = "Max"
+        purchaseSpreadButton.style.backgroundColor = "gray"
+    } 
+
+    if (damageUpgraded != 2) {
+        if (purchaseDamageButton.disabled == true) {
+            higherDamagePrice.innerHTML = "$" + damagePrice
+            purchaseDamageButton.innerHTML = "Upgrade"
+            purchaseDamageButton.style.backgroundColor = "blue" 
+            purchaseDamageButton.disabled = false
+        }
+    }
+    else if (damageUpgraded == 2) {
+        higherDamagePrice.innerHTML = "-"
+        purchaseDamageButton.innerHTML = "Max"
+        purchaseDamageButton.style.backgroundColor = "gray"
+    }
+
+    if (purchaseMoneyButton.disabled == true) {
+        moreMoneyPrice.innerHTML = "$" + moneyPrice
+        purchaseMoneyButton.innerHTML = "Upgrade"
+        purchaseMoneyButton.style.backgroundColor = "blue" 
+        purchaseMoneyButton.disabled = false
+    }
      
     enemyCount = 0    
     enemyCountLimit += 5   
     animate()
     spawnEnemies()
 
-    if (levelUp >= 3) {
-        spawnEnemiesLevelUp()
-        if (enemyRespawnTime > 500) {
-            enemyRespawnTime -= 100
+    if (levelUp > 2) {
+        if (enemyLevelUpRespawnTime > 400) {
+            enemyLevelUpRespawnTime -= 50
         }        
-        enemyCountLevelUp = 0
-        enemyCountLimitLevelUp += 5
         enemySpeed += 0.2
-        if (levelUp >= 6) {
-            if (enemyLevelUpRespawnTime > 500) {
-                enemyLevelUpRespawnTime -= 100
-            }
-        }
     } 
 })
